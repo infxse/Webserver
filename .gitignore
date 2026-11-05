@@ -9,3 +9,5 @@ server # compiled binary
 .vscode/
 
 compile_commands.json
+
+.cache/
