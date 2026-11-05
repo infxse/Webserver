@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C-Server</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            background: #0a0a0f;
+            color: #e0e0e8;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.015) 2px,
+                rgba(0, 255, 65, 0.015) 4px
+            );
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 65, 0.06) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        @keyframes typeIn {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        .terminal {
+            position: relative;
+            z-index: 1;
+            background: rgba(10, 10, 15, 0.9);
+            border: 1px solid #1a3a1a;
+            border-radius: 8px;
+            padding: 0;
+            max-width: 640px;
+            width: 90%;
+            box-shadow:
+                0 0 30px rgba(0, 255, 65, 0.05),
+                inset 0 0 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .terminal-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(20, 20, 30, 0.8);
+            border-bottom: 1px solid #1a3a1a;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+        }
+        .dot.red { background: #ff5f57; }
+        .dot.yellow { background: #febc2e; }
+        .dot.green { background: #28c840; }
+
+        .terminal-title {
+            flex: 1;
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .terminal-body {
+            padding: 24px;
+            line-height: 1.8;
+        }
+
+        .prompt { color: #00ff41; }
+        .flag { color: #ff6b6b; }
+        .path { color: #61afef; }
+        .comment { color: #555; }
+        .string { color: #e5c07b; }
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #00ff41;
+            vertical-align: text-bottom;
+            animation: blink 1s step-end infinite;
+        }
+
+        .line { margin-bottom: 2px; }
+
+        .status {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #1a3a1a;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #444;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #00ff41;
+            margin-right: 6px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .ascii-art {
+            color: #00ff41;
+            font-size: 11px;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="scanline"></div>
+    <div class="glow"></div>
+
+    <div class="terminal">
+        <div class="terminal-bar">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+            <div class="terminal-title">server &mdash; 80x24</div>
+        </div>
+        <div class="terminal-body">
+            <pre class="ascii-art">
+   ___   ___
+  / __| / __|  ___ _ ___ _____ _ _
+ | (__  \__ \ / -_) '_\ V / -_) '_|
+  \___| |___/ \___|_|  \_/\___|_|
+            </pre>
+
+            <div class="line"><span class="comment"># built from scratch in C</span></div>
+            <div class="line"><span class="comment"># no frameworks. no shortcuts. just syscalls.</span></div>
+            <div class="line">&nbsp;</div>
+            <div class="line">
+                <span class="prompt">$</span>
+                gcc <span class="flag">-Wall -Wextra -fsanitize=address</span>
+                <span class="path">server.c</span>
+            </div>
+            <div class="line">
+                <span class="prompt">$</span> ./server
+            </div>
+            <div class="line">
+                <span class="string">[INFO]</span> listening on <span class="path">127.0.0.1:8080</span>
+            </div>
+            <div class="line">
+                <span class="string">[INFO]</span> connection accepted &mdash; fd <span class="path">4</span>
+            </div>
+            <div class="line">
+                <span class="string">[200]</span> GET / &rarr; <span class="path">www/index.html</span>
+            </div>
+            <div class="line">&nbsp;</div>
+            <div class="line">
+                <span class="prompt">$</span> <span class="cursor"></span>
+            </div>
+
+            <div class="status">
+                <span><span class="status-dot"></span>server running</span>
+                <span>pid 1337 &bull; port 8080</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
